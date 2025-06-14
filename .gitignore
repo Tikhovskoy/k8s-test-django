@@ -2,3 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Kubernetes secret
+kubernetes/django-secret.yaml
