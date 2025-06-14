@@ -216,3 +216,39 @@ wsl -d Ubuntu -- minikube tunnel
 ```
 http://star-burger.test
 ```
+
+---
+
+## Автоматическая очистка сессий Django
+
+Для удаления устаревших сессий из базы данных в Kubernetes настроен `CronJob`. Он ежедневно запускает команду:
+
+```
+python manage.py clearsessions
+```
+
+### Файл манифеста:
+
+```
+kubernetes/django-clearsessions-cronjob.yaml
+```
+
+### Применение:
+
+```bash
+kubectl apply -f kubernetes/django-clearsessions-cronjob.yaml
+```
+
+### Ручной запуск (например, для теста):
+
+```bash
+kubectl create job --from=cronjob/django-clearsessions django-clearsessions-once
+```
+
+### Проверка выполнения:
+
+```bash
+kubectl get cronjob
+kubectl get jobs
+kubectl logs job/django-clearsessions-once
+```
