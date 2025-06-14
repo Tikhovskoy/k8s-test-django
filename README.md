@@ -258,3 +258,24 @@ kubectl get cronjob
 kubectl get jobs
 kubectl logs job/django-clearsessions-once
 ```
+
+## Запуск миграций Django
+
+Для применения миграций после обновления кода используйте отдельный `Job`.
+
+Файл манифеста: `kubernetes/django-migrate-job.yaml`
+
+Запуск:
+
+```bash
+kubectl apply -f kubernetes/django-migrate-job.yaml
+````
+
+Проверка:
+
+```bash
+kubectl get jobs
+kubectl logs job/django-migrate
+```
+
+Миграции запускаются с параметром `--noinput`.

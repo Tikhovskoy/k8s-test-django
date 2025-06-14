@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: django-migrate
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: django_app
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: django-secret
+          env:
+            - name: DEBUG
+              value: "false"
+            - name: ALLOWED_HOSTS
+              value: "127.0.0.1,localhost,192.168.49.2,star-burger.test"
+          command: ["python"]
+          args: ["manage.py", "migrate", "--noinput"]
