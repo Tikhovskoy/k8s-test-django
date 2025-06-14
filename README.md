@@ -233,6 +233,12 @@ python manage.py clearsessions
 kubernetes/django-clearsessions-cronjob.yaml
 ```
 
+### Особенности:
+- `.startingDeadlineSeconds: 60` — предотвращает ошибки при длительной остановке кластера
+- `ttlSecondsAfterFinished: 300` — удаляет выполненные задания через 5 минут
+- `successfulJobsHistoryLimit: 1` — хранится только одна успешная job
+- `failedJobsHistoryLimit: 1` — хранится только одна неудачная job
+
 ### Применение:
 
 ```bash
