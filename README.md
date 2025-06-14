@@ -111,6 +111,108 @@ kubectl apply -f kubernetes/django-secret.yaml
 kubectl get secrets
 ```
 
+Теперь `Deployment` сможет получить переменные `SECRET_KEY` и `DATABASE_URL`.
+
 ---
 
-Теперь `Deployment` сможет получить переменные `SECRET_KEY` и `DATABASE_URL`.
+## Настройка Ingress в Kubernetes
+
+Чтобы сайт был доступен по домену `http://star-burger.test` на стандартном порту 80 без проброса портов, настройте Ingress следующим образом:
+
+### 1. Включите Ingress Controller в Minikube
+
+```bash
+minikube addons enable ingress
+```
+
+Убедитесь, что контроллер запущен:
+
+```bash
+kubectl get pods -n ingress-nginx
+```
+
+---
+
+### 2. Измените сервис Django на ClusterIP
+
+В `kubernetes/django-service.yaml`:
+
+```yaml
+spec:
+  type: ClusterIP
+```
+
+Примените изменения:
+
+```bash
+kubectl apply -f kubernetes/django-service.yaml
+```
+
+---
+
+### 3. Добавьте манифест Ingress
+
+Создайте файл `kubernetes/django-ingress.yaml`:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: django-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: star-burger.test
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: django
+                port:
+                  number: 80
+```
+
+Примените:
+
+```bash
+kubectl apply -f kubernetes/django-ingress.yaml
+```
+
+---
+
+### 4. Пропишите домен локально
+
+Добавьте строку в файл `C:\Windows\System32\drivers\etc\hosts` (от имени администратора):
+
+```
+127.0.0.1  star-burger.test
+```
+
+Если не используете `minikube tunnel`, замените `127.0.0.1` на IP из команды:
+
+```bash
+minikube ip
+```
+
+---
+
+### 5. Запустите туннель (если используете Minikube с драйвером `docker`)
+
+Откройте PowerShell от имени администратора и выполните:
+
+```powershell
+wsl -d Ubuntu -- minikube tunnel
+```
+
+Оставьте это окно открытым.
+
+---
+
+Теперь сайт будет доступен по адресу:
+
+```
+http://star-burger.test
+```
