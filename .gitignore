@@ -5,3 +5,5 @@ __pycache__/
 
 # Kubernetes secret
 kubernetes/django-secret.yaml
+
+.env

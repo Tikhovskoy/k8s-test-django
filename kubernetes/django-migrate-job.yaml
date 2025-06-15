@@ -14,10 +14,5 @@ spec:
           envFrom:
             - secretRef:
                 name: django-secret
-          env:
-            - name: DEBUG
-              value: "false"
-            - name: ALLOWED_HOSTS
-              value: "127.0.0.1,localhost,192.168.49.2,star-burger.test"
           command: ["python"]
           args: ["manage.py", "migrate", "--noinput"]
