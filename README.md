@@ -217,7 +217,57 @@ wsl -d Ubuntu -- minikube tunnel
 http://star-burger.test
 ```
 
----
+## Развёртывание PostgreSQL в Minikube
+
+База данных PostgreSQL развёрнута в Minikube с помощью Helm
+
+### Установка Helm
+
+[Инструкция по установке Helm](https://helm.sh/docs/intro/install/)
+
+### Установка PostgreSQL
+
+Добавьте репозиторий Bitnami и установите PostgreSQL:
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+
+helm install postgres-db bitnami/postgresql \
+  --set auth.username=django \
+  --set auth.password=django123 \
+  --set auth.database=django_db
+````
+
+### Подключение к базе данных
+
+Получите пароль для подключения:
+
+```bash
+kubectl get secret postgres-db-postgresql -o jsonpath="{.data.password}" | base64 -d
+```
+
+Откройте порт:
+
+```bash
+kubectl port-forward svc/postgres-db-postgresql 15432:5432
+```
+
+И подключитесь с помощью psql:
+
+```bash
+PGPASSWORD=ваш_пароль psql -h 127.0.0.1 -U django -d django_db -p 15432
+```
+
+### Использование в Django
+
+Приложение подключается к базе через переменную окружения `DATABASE_URL`:
+
+```
+postgres://django:django123@postgres-db-postgresql.default.svc.cluster.local:5432/django_db
+```
+
+Эта строка прописана в `kubernetes/django-secret.yaml` и доступна во всех контейнерах через `envFrom: secretRef`.
 
 ## Автоматическая очистка сессий Django
 
