@@ -329,3 +329,138 @@ kubectl logs job/django-migrate
 ```
 
 Миграции запускаются с параметром `--noinput`.
+
+## Деплой в dev-окружение (Яндекс.Облако)
+
+### Контекст окружения
+
+* Кластер: `yc-sirius`
+* Namespace: `edu-viktor-tihovskoy`
+* Домен: `https://edu-viktor-tihovskoy.sirius-k8s.dvmn.org`
+* База данных: PostgreSQL (Managed, подключение по `DATABASE_URL`)
+* Хранилище: S3-бакет `edu-viktor-tihovskoy`
+
+### Переменные окружения
+
+Устанавливаются через `Secret` с именем `django-secret`. Список:
+
+* `SECRET_KEY`
+* `DEBUG`
+* `ALLOWED_HOSTS`
+* `DATABASE_URL`
+* `DJANGO_SUPERUSER_USERNAME`
+* `DJANGO_SUPERUSER_EMAIL`
+* `DJANGO_SUPERUSER_PASSWORD`
+
+Secret можно создать через файл:
+
+```bash
+kubectl apply -f deploy/yc-sirius/edu-viktor-tihovskoy/secrets/django-secret.yaml
+```
+
+### Пример секрета
+
+Пример файла с переменными окружения для Django. Используется при создании `Secret`:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: django-secret
+  namespace: edu-viktor-tihovskoy
+type: Opaque
+stringData:
+  DEBUG: "false"
+  ALLOWED_HOSTS: "edu-viktor-tihovskoy.sirius-k8s.dvmn.org"
+  SECRET_KEY: "<secure-random-secret>"
+  DATABASE_URL: "postgres://<user>:<password>@<host>:<port>/<dbname>"
+  DJANGO_SUPERUSER_USERNAME: "admin"
+  DJANGO_SUPERUSER_EMAIL: "admin@example.com"
+  DJANGO_SUPERUSER_PASSWORD: "<secure-password>"
+```
+
+### Сборка и загрузка Docker-образа
+
+Получить текущий git-хэш:
+
+```bash
+git rev-parse --short HEAD
+```
+
+Собрать образ и запушить:
+
+```bash
+docker build -t tikhovskoi/k8s-test-django:<git-hash> ./backend_main_django
+docker push tikhovskoi/k8s-test-django:<git-hash>
+```
+
+Убедитесь, что в `django-deployment.yaml` используется тот же тег.
+
+### Применение манифестов
+
+```bash
+kubectl apply -n edu-viktor-tihovskoy -f deploy/yc-sirius/edu-viktor-tihovskoy/manifests/ --recursive
+```
+
+Проверка:
+
+```bash
+kubectl get pods -n edu-viktor-tihovskoy
+kubectl get svc -n edu-viktor-tihovskoy
+```
+
+### Применение миграций
+
+```bash
+kubectl apply -f deploy/yc-sirius/edu-viktor-tihovskoy/manifests/django-migrate-job.yaml -n edu-viktor-tihovskoy
+kubectl logs job/django-migrate -n edu-viktor-tihovskoy
+```
+
+### Создание суперпользователя
+
+```bash
+kubectl apply -f deploy/yc-sirius/edu-viktor-tihovskoy/manifests/createsuperuser-job.yaml -n edu-viktor-tihovskoy
+kubectl logs job/django-createsuperuser -n edu-viktor-tihovskoy
+```
+
+### Проверка сайта
+
+Сайт доступен через проброс порта:
+
+```bash
+kubectl port-forward service/django 8000:80 -n edu-viktor-tihovskoy
+```
+
+После этого сайт откроется по адресу:
+
+```
+http://localhost:8000
+```
+
+Админка: `http://localhost:8000/admin/`
+
+### Запуск management-команд вручную
+
+```bash
+kubectl exec -it deploy/django-app -n edu-viktor-tihovskoy -- python manage.py <команда>
+```
+
+Примеры:
+
+```bash
+python manage.py shell
+python manage.py showmigrations
+python manage.py clearsessions
+```
+
+### Логи приложения
+
+```bash
+kubectl logs deploy/django-app -n edu-viktor-tihovskoy
+```
+
+Для job:
+
+```bash
+kubectl logs job/<job-name> -n edu-viktor-tihovskoy
+```

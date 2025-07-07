@@ -10,7 +10,7 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: fpqn:3naod1-brub1aucbb
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
-  ingressClassName: nginx
+  ingressClassName: alb
   rules:
     - host: edu-viktor-tihovskoy.sirius-k8s.dvmn.org
       http:
@@ -19,6 +19,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: nginx-service
+                name: django
                 port:
                   number: 80

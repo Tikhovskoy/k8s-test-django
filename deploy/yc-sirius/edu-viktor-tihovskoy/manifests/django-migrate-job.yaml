@@ -9,7 +9,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: migrate
-          image: django_app
+          image: tikhovskoi/k8s-test-django:c37b6f0
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:

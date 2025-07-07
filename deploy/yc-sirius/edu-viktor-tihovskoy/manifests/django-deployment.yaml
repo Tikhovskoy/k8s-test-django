@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: django-app
+  namespace: edu-viktor-tihovskoy 
 spec:
   replicas: 1
   selector:
@@ -14,34 +15,9 @@ spec:
     spec:
       containers:
         - name: django
-          image: <твой-имейдж>
+          image: tikhovskoi/k8s-test-django:c37b6f0
           ports:
             - containerPort: 80
-          env:
-            - name: DEBUG
-              value: "false"
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: django-secret
-                  key: SECRET_KEY
-            - name: ALLOWED_HOSTS
-              value: "127.0.0.1,localhost,star-burger.test"
-            - name: DB_ENGINE
-              value: "django.db.backends.postgresql"
-            - name: DB_NAME
-              value: "django_db"
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: pg-release-postgresql
-                  key: username
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: pg-release-postgresql
-                  key: password
-            - name: DB_HOST
-              value: "pg-release-postgresql"
-            - name: DB_PORT
-              value: "5432"
+          envFrom:
+            - secretRef:
+                name: django-secret
