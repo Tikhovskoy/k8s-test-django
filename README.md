@@ -399,7 +399,8 @@ docker push tikhovskoi/k8s-test-django:<git-hash>
 ### Применение манифестов
 
 ```bash
-kubectl apply -n edu-viktor-tihovskoy -f deploy/yc-sirius/edu-viktor-tihovskoy/manifests/ --recursive
+# Применяем все манифесты и секреты одним скриптом
+bash deploy/yc-sirius/edu-viktor-tihovskoy/scripts/apply.sh
 ```
 
 Проверка:
@@ -407,21 +408,36 @@ kubectl apply -n edu-viktor-tihovskoy -f deploy/yc-sirius/edu-viktor-tihovskoy/m
 ```bash
 kubectl get pods -n edu-viktor-tihovskoy
 kubectl get svc -n edu-viktor-tihovskoy
+kubectl get ingress -n edu-viktor-tihovskoy
 ```
 
-### Применение миграций
+---
+
+### Применение миграций (Job)
 
 ```bash
-kubectl apply -f deploy/yc-sirius/edu-viktor-tihovskoy/manifests/django-migrate-job.yaml -n edu-viktor-tihovskoy
 kubectl logs job/django-migrate -n edu-viktor-tihovskoy
 ```
 
-### Создание суперпользователя
+Если job уже завершилась, можно пересоздать:
 
 ```bash
-kubectl apply -f deploy/yc-sirius/edu-viktor-tihovskoy/manifests/createsuperuser-job.yaml -n edu-viktor-tihovskoy
-kubectl logs job/django-createsuperuser -n edu-viktor-tihovskoy
+kubectl delete job django-migrate -n edu-viktor-tihovskoy
+kubectl apply -f deploy/yc-sirius/edu-viktor-tihovskoy/manifests/django-migrate-job.yaml -n edu-viktor-tihovskoy
 ```
+
+---
+
+### Создание суперпользователя
+
+Если переменные окружения `DJANGO_SUPERUSER_*` прописаны в секрете, суперпользователь создаётся при первой миграции.
+Если нужно создать вручную:
+
+```bash
+kubectl exec -it deploy/django-app -n edu-viktor-tihovskoy -- python manage.py createsuperuser
+```
+
+---
 
 ### Проверка сайта
 
@@ -431,15 +447,14 @@ kubectl logs job/django-createsuperuser -n edu-viktor-tihovskoy
 kubectl port-forward service/django 8000:80 -n edu-viktor-tihovskoy
 ```
 
-После этого сайт откроется по адресу:
+После этого:
 
-```
-http://localhost:8000
-```
+* Сайт: [http://localhost:8000](http://localhost:8000)
+* Админка: [http://localhost:8000/admin/](http://localhost:8000/admin/)
 
-Админка: `http://localhost:8000/admin/`
+---
 
-### Запуск management-команд вручную
+###️ Запуск Django-команд вручную
 
 ```bash
 kubectl exec -it deploy/django-app -n edu-viktor-tihovskoy -- python manage.py <команда>
@@ -453,6 +468,8 @@ python manage.py showmigrations
 python manage.py clearsessions
 ```
 
+---
+
 ### Логи приложения
 
 ```bash
@@ -462,5 +479,5 @@ kubectl logs deploy/django-app -n edu-viktor-tihovskoy
 Для job:
 
 ```bash
-kubectl logs job/<job-name> -n edu-viktor-tihovskoy
+kubectl logs job/django-migrate -n edu-viktor-tihovskoy
 ```
