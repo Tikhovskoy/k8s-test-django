@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 # Kubernetes secret
-kubernetes/django-secret.yaml
+deploy/yc-sirius/edu-viktor-tihovskoy/secrets/*.yaml
 
 .env
+
