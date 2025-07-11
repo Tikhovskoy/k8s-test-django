@@ -454,7 +454,7 @@ kubectl port-forward service/django 8000:80 -n edu-viktor-tihovskoy
 
 ---
 
-###️ Запуск Django-команд вручную
+### Запуск Django-команд вручную
 
 ```bash
 kubectl exec -it deploy/django-app -n edu-viktor-tihovskoy -- python manage.py <команда>
